@@ -1,46 +1,83 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
-var task string = "эщкере"
-
-func main() {
-	http.HandleFunc("/", handleGet)
-	http.HandleFunc("/update", handlePost)
-
-	fmt.Println("сервер запущен")
-	http.ListenAndServe(":8080", nil)
+type Task struct {
+	ID   string `json:"id"`
+	Text string `json:"task"`
 }
 
-func handleGet(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, "не использован GET", http.StatusMethodNotAllowed)
-		return
-	}
-	fmt.Fprintf(w, "привет, %s", task)
+var tasks []Task
+
+func getTask(c echo.Context) error {
+	return c.JSON(http.StatusOK, tasks)
 }
 
-func handlePost(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "не использован POST", http.StatusMethodNotAllowed)
-		return
-	}
-
+func postTask(c echo.Context) error {
 	var request struct {
 		Task string `json:"task"`
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&request)
-	if err != nil {
-		http.Error(w, "неправильный JSON", http.StatusBadRequest)
-		return
+	if err := c.Bind(&request); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
 	}
 
-	task = request.Task
+	task := Task{
+		ID:   uuid.NewString(),
+		Text: request.Task,
+	}
 
-	fmt.Fprintf(w, "задача обновлена: %s", task)
+	tasks = append(tasks, task)
+	return c.JSON(http.StatusCreated, task)
+}
+
+func patchTask(c echo.Context) error {
+	id := c.Param("id")
+	var request struct {
+		Task string `json:"task"`
+	}
+
+	if err := c.Bind(&request); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+	}
+
+	for i, task := range tasks {
+		if task.ID == id {
+			tasks[i].Text = request.Task
+			return c.JSON(http.StatusOK, tasks[i])
+		}
+	}
+	return c.JSON(http.StatusNotFound, map[string]string{"error": "Task not found"})
+}
+
+func deleteTask(c echo.Context) error {
+	id := c.Param("id")
+	for i, task := range tasks {
+		if task.ID == id {
+			tasks = append(tasks[:i], tasks[i+1:]...)
+			return c.NoContent(http.StatusNoContent)
+		}
+	}
+	return c.JSON(http.StatusNotFound, map[string]string{"error": "Task not found"})
+}
+
+func main() {
+	e := echo.New()
+	e.Use(middleware.CORS())
+	e.Use(middleware.Logger())
+
+	e.GET("/task", getTask)
+	e.POST("/task", postTask)
+	e.PATCH("/task/:id", patchTask)
+	e.DELETE("/task/:id", deleteTask)
+
+	fmt.Println("Сервер запущен на http://localhost:8080")
+	e.Logger.Fatal(e.Start("localhost:8080")) // Явно указываем localhost
 }
