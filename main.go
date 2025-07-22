@@ -17,35 +17,36 @@ type Task struct {
 var tasks []Task
 
 func getTask(c echo.Context) error {
+	if tasks == nil {
+		return c.JSON(http.StatusOK, []Task{})
+	}
 	return c.JSON(http.StatusOK, tasks)
 }
 
 func postTask(c echo.Context) error {
 	var request struct {
-		Task string `json:"task"`
+		Task string `json: "task"`
 	}
-
 	if err := c.Bind(&request); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request"})
 	}
 
 	task := Task{
 		ID:   uuid.NewString(),
 		Text: request.Task,
 	}
-
 	tasks = append(tasks, task)
+
 	return c.JSON(http.StatusCreated, task)
 }
 
 func patchTask(c echo.Context) error {
 	id := c.Param("id")
 	var request struct {
-		Task string `json:"task"`
+		Task string `json: "task"`
 	}
-
 	if err := c.Bind(&request); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request"})
 	}
 
 	for i, task := range tasks {
@@ -54,22 +55,24 @@ func patchTask(c echo.Context) error {
 			return c.JSON(http.StatusOK, tasks[i])
 		}
 	}
-	return c.JSON(http.StatusNotFound, map[string]string{"error": "Task not found"})
+	return c.JSON(http.StatusNotFound, map[string]string{"error": "task not found"})
 }
 
 func deleteTask(c echo.Context) error {
 	id := c.Param("id")
+
 	for i, task := range tasks {
 		if task.ID == id {
 			tasks = append(tasks[:i], tasks[i+1:]...)
 			return c.NoContent(http.StatusNoContent)
 		}
 	}
-	return c.JSON(http.StatusNotFound, map[string]string{"error": "Task not found"})
+	return c.JSON(http.StatusNotFound, map[string]string{"error": "task not found"})
 }
 
 func main() {
 	e := echo.New()
+
 	e.Use(middleware.CORS())
 	e.Use(middleware.Logger())
 
@@ -78,6 +81,7 @@ func main() {
 	e.PATCH("/task/:id", patchTask)
 	e.DELETE("/task/:id", deleteTask)
 
-	fmt.Println("Сервер запущен на http://localhost:8080")
-	e.Logger.Fatal(e.Start("localhost:8080")) // Явно указываем localhost
+	fmt.Println("сервер запущен")
+
+	e.Logger.Fatal(e.Start("localhost:8080"))
 }
