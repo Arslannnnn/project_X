@@ -1,7 +1,7 @@
 # Makefile для создания миграций
 
 # Переменные которые будут использоваться в наших командах (Таргетах)
-DB_DSN := "postgres://postgres:12345@localhost:5432/main?sslmode=disable"
+DB_DSN := "postgres://postgres:12345@localhost:5432/tasks?sslmode=disable"
 MIGRATE := migrate -path ./migrations -database $(DB_DSN)
 
 # Таргет для создания новой миграции
