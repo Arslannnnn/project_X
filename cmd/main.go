@@ -17,10 +17,6 @@ func main() {
 		log.Fatalf("could not connect to DB: %v", err)
 	}
 
-	if err := database.AutoMigrate(&taskService.Task{}); err != nil {
-		log.Fatalf("could not migrate: %v", err)
-	}
-
 	taskRepo := taskService.NewTaskRepository(database)
 	taskServ := taskService.NewTaskService(taskRepo)
 	taskHandler := handlers.NewTaskHandler(taskServ)
