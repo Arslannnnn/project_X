@@ -20,7 +20,7 @@ func NewTaskService(r TaskRepository) TaskService {
 
 func (s *tasskService) CreateTask(text string, isDone bool) (Task, error) {
 	task := Task{
-		ID:     uuid.NewString(),
+		ID:     newID(),
 		Text:   text,
 		IsDone: isDone,
 	}
@@ -58,4 +58,8 @@ func (s *tasskService) UpdateTask(id, text string, isDone bool) (Task, error) {
 
 func (s *tasskService) DeleteTask(id string) error {
 	return s.repo.DeleteTask(id)
+}
+
+var newID = func() string {
+	return uuid.NewString()
 }
