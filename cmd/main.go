@@ -6,7 +6,9 @@ import (
 	"project_x/internal/db"
 	"project_x/internal/handlers"
 	"project_x/internal/taskService"
+	"project_x/internal/userService"
 	"project_x/internal/web/tasks"
+	"project_x/internal/web/users"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -22,6 +24,10 @@ func main() {
 	taskServ := taskService.NewTaskService(taskRepo)
 	taskHandler := handlers.NewHandler(taskServ)
 
+	userRepo := userService.NewUserRepository(database)
+	userServ := userService.NewUserService(userRepo)
+	userHandler := handlers.NewUserHandler(userServ)
+
 	e := echo.New()
 
 	e.Use(middleware.CORS())
@@ -29,6 +35,9 @@ func main() {
 
 	strictHandler := tasks.NewStrictHandler(taskHandler, nil)
 	tasks.RegisterHandlers(e, strictHandler)
+
+	userStrictHandler := users.NewStrictHandler(userHandler, nil)
+	users.RegisterHandlers(e, userStrictHandler)
 
 	fmt.Println("Server started at http://localhost:8080")
 	e.Logger.Fatal(e.Start(":8080"))
