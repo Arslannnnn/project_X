@@ -2,6 +2,7 @@ openapi: 3.0.0
 info:
   title: API
   version: 1.0.0
+
 paths:
   /tasks:
     get:
@@ -77,6 +78,29 @@ paths:
           description: Task deleted successfully
         '404':
           description: Task not found
+  /users/{id}/tasks:
+    get:
+      summary: Get all tasks for a user
+      tags:
+        - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID пользователя
+      responses:
+        '200':
+          description: A list of user's tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '404':
+          description: User not found
   /users:
     get:
       summary: Get all users
@@ -181,10 +205,13 @@ components:
           type: string
         is_done:
           type: boolean
+        user_id:  
+          type: string
       required:
         - id
         - task
         - is_done
+        - user_id  
     TaskRequest:
       type: object
       properties:
@@ -192,9 +219,12 @@ components:
           type: string
         is_done:
           type: boolean
+        user_id: 
+          type: string
       required:
         - task
         - is_done
+        - user_id  
     User:
       type: object
       properties:
@@ -208,7 +238,6 @@ components:
         - id
         - email
         - password
-
     UserRequest:
       type: object
       properties:

@@ -19,13 +19,13 @@ func (h *Handler) GetTasks(ctx context.Context, request tasks.GetTasksRequestObj
 	if err != nil {
 		return nil, err
 	}
-
 	response := tasks.GetTasks200JSONResponse{}
 	for _, tsk := range allTasks {
 		task := tasks.Task{
 			Id:     tsk.ID,
 			Task:   tsk.Text,
 			IsDone: tsk.IsDone,
+			UserId: *tsk.UserID,
 		}
 		response = append(response, task)
 	}
@@ -35,7 +35,7 @@ func (h *Handler) GetTasks(ctx context.Context, request tasks.GetTasksRequestObj
 func (h *Handler) PostTasks(ctx context.Context, request tasks.PostTasksRequestObject) (tasks.PostTasksResponseObject, error) {
 	taskRequest := request.Body
 
-	createdTask, err := h.service.CreateTask(taskRequest.Task, taskRequest.IsDone)
+	createdTask, err := h.service.CreateTask(taskRequest.Task, taskRequest.IsDone, taskRequest.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -44,6 +44,7 @@ func (h *Handler) PostTasks(ctx context.Context, request tasks.PostTasksRequestO
 		Id:     createdTask.ID,
 		Task:   createdTask.Text,
 		IsDone: createdTask.IsDone,
+		UserId: *createdTask.UserID,
 	}
 	return response, nil
 }
@@ -58,16 +59,33 @@ func (h *Handler) DeleteTasksId(ctx context.Context, request tasks.DeleteTasksId
 
 func (h *Handler) PatchTasksId(ctx context.Context, request tasks.PatchTasksIdRequestObject) (tasks.PatchTasksIdResponseObject, error) {
 	taskRequest := request.Body
-
 	updatedTask, err := h.service.UpdateTask(request.Id, taskRequest.Task, taskRequest.IsDone)
 	if err != nil {
 		return nil, err
 	}
-
 	response := tasks.PatchTasksId200JSONResponse{
 		Id:     updatedTask.ID,
 		Task:   updatedTask.Text,
 		IsDone: updatedTask.IsDone,
+		UserId: *updatedTask.UserID,
+	}
+	return response, nil
+}
+
+func (h *Handler) GetUsersIdTasks(ctx context.Context, request tasks.GetUsersIdTasksRequestObject) (tasks.GetUsersIdTasksResponseObject, error) {
+	userTasks, err := h.service.GetTasksByUserID(request.Id)
+	if err != nil {
+		return tasks.GetUsersIdTasks404Response{}, nil
+	}
+	response := tasks.GetUsersIdTasks200JSONResponse{}
+	for _, tsk := range userTasks {
+		task := tasks.Task{
+			Id:     tsk.ID,
+			Task:   tsk.Text,
+			IsDone: tsk.IsDone,
+			UserId: *tsk.UserID,
+		}
+		response = append(response, task)
 	}
 	return response, nil
 }

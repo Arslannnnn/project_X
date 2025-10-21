@@ -16,6 +16,7 @@ func TestCreateTask(t *testing.T) {
 		mockSetup func(m *MockTaskRepository, task Task)
 		wantTask  Task
 		wantErr   bool
+		userID    string
 	}{
 		{
 			name:   "успешное создание задачи",
@@ -31,6 +32,7 @@ func TestCreateTask(t *testing.T) {
 				IsDone: false,
 			},
 			wantErr: false,
+			userID:  "testuser",
 		},
 		{
 			name:   "ошибка при создании",
@@ -62,7 +64,7 @@ func TestCreateTask(t *testing.T) {
 			tt.mockSetup(mockRepo, task)
 
 			service := NewTaskService(mockRepo)
-			result, err := service.CreateTask(tt.text, tt.isDone)
+			result, err := service.CreateTask(tt.text, tt.isDone, tt.userID)
 
 			if tt.wantErr {
 				assert.Error(t, err)
